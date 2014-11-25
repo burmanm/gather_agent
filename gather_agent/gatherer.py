@@ -18,7 +18,7 @@ class Gatherer(object):
 
     def create_event(self, key, value):
         timestamp = int(round(time.time() * 1000))
-        prefixed_key = "{0}.{1}".format(self.config['prefix'],key)
+        prefixed_key = "{0}.{1}.{2}".format(self.config['prefix'], self.__class__.__name__, key)
         item = { 'id': prefixed_key,
                  'timestamp': timestamp,
                  'value': value}

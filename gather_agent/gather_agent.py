@@ -1,11 +1,13 @@
 import Queue
 import handlers
-import gatherers
 import inspect
 import threading
-import platform
 import pkgutil
 import os
+import imp
+from gatherer import Gatherer
+import signal
+import platform
 
 class GatherAgent(object):
 
@@ -17,6 +19,9 @@ class GatherAgent(object):
         # Start gatherers and handlers..
         self.client = handlers.RHQMetricsHandler(self.config)
         self.start_gatherers(self.load_gatherers_list(), self.client)
+
+        signal.signal(signal.SIGINT, self._stop)
+        self.active = True        
         
         self.loop()
 
@@ -29,7 +34,7 @@ class GatherAgent(object):
             self.gatherers.append(t)
         
     def loop(self):
-        while True:
+        while self.active:
             event = self.q.get()
             event.handle()
 
@@ -40,13 +45,18 @@ class GatherAgent(object):
         modules = pkgutil.iter_modules(path=[path])
 
         for _, module_name, _ in modules:
-            module = __import__(path + '.' + module_name, fromlist=['*'])
+            fp, pathname, description = imp.find_module(module_name, [path])
+            module = imp.load_module(module_name, fp, pathname, description)
             for name in dir(module):
                 o = getattr(module, name)
-                if inspect.isclass(o) and issubclass(o, gatherers.gatherer.Gatherer) and o is not gatherers.gatherer.Gatherer:
+                if inspect.isclass(o) and issubclass(o, Gatherer) and o is not Gatherer:
                     class_list.append(o)
         return class_list
 
+    def _stop(self, signum, frame):
+        self.active = False
+        for t in self.gatherers:
+            t.close()
 
 if __name__ == "__main__":
     g = GatherAgent()

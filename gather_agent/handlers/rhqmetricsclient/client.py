@@ -42,11 +42,11 @@ class RHQMetricsClient:
             # Finally, close
             res.close()
 
-        except HTTPError, e:
-            print "Response Code was: " + e.code
+        except urllib2.HTTPError, e:
+            print "Response Code was: " + str(e.code)
 
-        except URLError, e:
-            print "Error was: " + e.reason
+        except urllib2.URLError, e:
+            print "Could not send event to RHQ Metrics: " + str(e.reason)
 
     def _set_to_list(self, obj):
         if isinstance(obj, list):
