@@ -21,7 +21,7 @@ class Gatherer(object):
         prefixed_key = "{0}.{1}.{2}".format(self.config['prefix'], self.__class__.__name__, key)
         item = { 'id': prefixed_key,
                  'timestamp': timestamp,
-                 'value': value}
+                 'value': float(value)}
         return item
 
     def handle(self, item):
@@ -33,8 +33,9 @@ class Gatherer(object):
         """
         while self.active:
             item = self.gather()
-            event = Event(self.handler, item)
-            self.q.put(event)
+            if item is not None:
+                event = Event(self.handler, item)
+                self.q.put(event)
             time.sleep(self.interval)
         return
 

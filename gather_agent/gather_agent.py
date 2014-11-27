@@ -31,7 +31,7 @@ class GatherAgent(object):
             t = threading.Thread(target=instance.run)
             t.daemon = True
             t.start()
-            self.gatherers.append(t)
+            self.gatherers.append(instance)
         
     def loop(self):
         while self.active:
@@ -54,9 +54,11 @@ class GatherAgent(object):
         return class_list
 
     def _stop(self, signum, frame):
+        print 'Received signal ' + str(signum) + ', closing gatherers and handlers'
         self.active = False
-        for t in self.gatherers:
-            t.close()
+        for i in self.gatherers:
+            i.close()
+        self.client.close()
 
 if __name__ == "__main__":
     g = GatherAgent()

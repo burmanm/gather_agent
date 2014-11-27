@@ -1,3 +1,1 @@
-from rhqmetrics import RHQMetricsHandler
-from handler import Handler
-
+from rhqmetrics_handler import RHQMetricsHandler
