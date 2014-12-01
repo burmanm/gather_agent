@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='gather-agent',
-      version='0.3',
+      version='0.4',
       description='Simple agent that gathers basic system statistics to RHQ Metrics',
       author='Michael Burman'
       author_email='miburman@redhat.com',

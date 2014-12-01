@@ -1,5 +1,5 @@
 import time
-from gatherEvent import Event
+from gather_event import Event
 
 class Gatherer(object):
     """
@@ -9,7 +9,7 @@ class Gatherer(object):
     def __init__(self, handler, config, q):
         self.q = q
         self.config = config
-        self.interval = config['interval']
+        self.interval = float(config['interval'])
         self.handler = handler
         self.active = True
 
@@ -23,9 +23,6 @@ class Gatherer(object):
                  'timestamp': timestamp,
                  'value': float(value)}
         return item
-
-    def handle(self, item):
-        handler.handle(item)
 
     def run(self):
         """
