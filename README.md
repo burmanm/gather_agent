@@ -74,3 +74,11 @@ class my_gatherer(Gatherer):
     def init(self, config):
         self.example_property = config['example']
 ```
+
+# Advanced
+
+## Architecture
+
+The agent uses a simple implementation of the reactor pattern (to demultiplex gatherers to a single stream of events towards the handler) where each gatherer is ran in their own thread. Whenever there's an event available, it sends that event to a blocking Queue, which is what the main thread is waiting to read. Once an event is sent to the queue, it is processed in the main thread by the handler. Thus, slow invocation of the handler will block processing of the next object.
+
+The advantages is to keep the events serialized and to avoid any race conditions on the responding handler. To improve performance, the handler could use some sort of buffering to prevent spamming the receiving end. This is however the job of the handler and the actual dispatcher will always send events if there's any waiting in the queue.
