@@ -1,6 +1,38 @@
 ## Basics
 
-Small agent that collects basic system information and sends them to the RHQ Metrics. It is designed to avoid external dependencies and the only external dependency which it requires is the [rhq-metrics-python-client](https://github.com/burmanm/rhq-metrics-python-client)
+This is a small system agent that collects basic system information and sends them to the RHQ Metrics. It is designed to avoid external dependencies and the only external dependency which it requires is the [rhq-metrics-python-client](https://github.com/burmanm/rhq-metrics-python-client)
+
+## Running
+
+To run your own instance of gather_agent, use the following syntax:
+
+```
+python gather_agent.py [ini-file]
+```
+
+If the ini-file is not defined, the default is to read from the gather_agent.ini. To stop the agent, simply kill it.
+
+### SystemD
+
+If you wish to automatically manage the gather_agent's lifecycle, one can run it as a systemd service. Create a file called 
+
+1. Create /etc/systemd/system/gather-agent.service
+```
+[Unit]
+Description=Small gather agent that sends system statistics to RHQ Metrics
+
+[Service]
+ExecStart=/usr/bin/python /path_to/gather_agent.py /path_to/config_file.ini
+Restart=Always
+
+[Install]
+WantedBy=multi-user.target
+```
+2. Controlling systemd:
+  1. To reload configuration file run ``sudo systemctl daemon-reload``
+  2. To enable the service, run ``sudo systemctl enable gather-agent``
+  3. To start the agent ``sudo systemctl start gather-agent``
+  4. To stop the agent ``sudo systemctl stop gather-agent``
 
 ## Creating your own collectors
 
@@ -16,10 +48,17 @@ class my_gatherer(Gatherer):
         return self.create_event(key, value)
 ```
 
-If you need to pass configuration options to the gatherer while it's being loaded (which you can access with self.config['key']), add under the gather_agent.ini [Gatherer] section new properties with the format: classname.key=value (classname should be lowercased).
+If you need to pass configuration options to the gatherer while it's being loaded add under the gather_agent.ini [Gatherer] section new properties with the format: classname.key=value (classname should be lowercased). To access them, fetch values with self.config['key']. If you need them on instance init, override init(self, config) function.
 
 Example:
 ```
 [Gatherers]
 my_gatherer.example=value
+```
+
+```python
+
+class my_gatherer(Gatherer):
+    def init(self, config):
+        self.example_property = config['example']
 ```
