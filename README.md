@@ -60,6 +60,8 @@ class my_gatherer(Gatherer):
         return self.create_event(key, value)
 ```
 
+The resulting key will be in the format of ``{hostname}.{class_name}.{key}``. If you need to pass this invocation, send a ``None``, which is ignored by the default implementation. If you want to pass original timestamp, add third parameter to the object (send timestamp as milliseconds from epoch).
+
 If you need to pass configuration options to the gatherer while it's being loaded add under the gather_agent.ini [Gatherer] section new properties with the format: classname.key=value (classname should be lowercased). To access them, fetch values with self.config['key']. If you need them on instance init, override init(self, config) function.
 
 Example:
@@ -82,3 +84,13 @@ class my_gatherer(Gatherer):
 The agent uses a simple implementation of the reactor pattern (to demultiplex gatherers to a single stream of events towards the handler) where each gatherer is ran in their own thread. Whenever there's an event available, it sends that event to a blocking Queue, which is what the main thread is waiting to read. Once an event is sent to the queue, it is processed in the main thread by the handler. Thus, slow invocation of the handler will block processing of the next object.
 
 The advantages is to keep the events serialized and to avoid any race conditions on the responding handler. To improve performance, the handler could use some sort of buffering to prevent spamming the receiving end. This is however the job of the handler and the actual dispatcher will always send events if there's any waiting in the queue.
+
+## Overriding default behaviour of gatherers
+
+### Interval
+
+The default implementation of the Gatherer sleeps using time.sleep() between each read phase. This approach works well with the Python's GIL limitation and is suitable for many metrics. If your gatherer instead needs to remove the interval behaviour and do for example instant publish when event is available, override the run() method in your extended Gatherer.
+
+### Event key override
+
+Whenever gatherer's create_event is called, the created event has a key that's formatted in {hostname}.{class_name}.{key} to prevent different handlers and machines from creating the same key in the receiving system. To change this default behaviour for your gatherer, override the create_event() method in your gatherer.
