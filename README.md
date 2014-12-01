@@ -12,7 +12,7 @@ python gather_agent.py [ini-file]
 
 If the ini-file is not defined, the default is to read from the gather_agent.ini. To stop the agent, simply kill it.
 
-### SystemD
+### Systemd
 
 If you wish to automatically manage the gather_agent's lifecycle, one can run it as a systemd service. Create a file called 
 
