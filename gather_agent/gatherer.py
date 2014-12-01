@@ -15,13 +15,27 @@ class Gatherer(object):
         self.init(self.config)
 
     def gather(self):
+        """
+        The function that returns an event or a list of events. Must be overridden
+        in the extending class.
+        """
         raise NotImplementedError()
 
     def init(self, config):
+        """
+        Init method for the objects that extend Gatherer. By default does
+        not do anything.
+        """
         pass
 
-    def create_event(self, key, value):
-        timestamp = int(round(time.time() * 1000))
+    def create_event(self, key, value, timestamp=None):
+        """
+        Returns a new Event based on the key and value, and creates a timestamp to the
+        object. A key that is created is formatted with hostname.class_name.key 
+        """
+        if timestamp is None:
+            timestamp = int(round(time.time() * 1000))
+            
         prefixed_key = "{0}.{1}.{2}".format(self.config['prefix'], self.__class__.__name__, key)
         item = { 'id': prefixed_key,
                  'timestamp': timestamp,

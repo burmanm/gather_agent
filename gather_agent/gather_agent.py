@@ -12,10 +12,18 @@ import platform
 import ConfigParser
 
 class GatherAgent(object):
+    """
+    A simple layer between inputs (gatherers) and output (handler) using a simple
+    implementation of reactor pattern.
+    """
 
     KEY_SEPARATOR = '.'
     
     def start(self, config_file='gather_agent.ini'):
+        """
+        Initialization method of the GatherAgent. Sets up required queues, arses 
+        the configuration, loads gatherers and handler and starts the dispatcher.
+        """
         self.q = Queue.Queue()
         self.gatherers = []
 
@@ -39,12 +47,15 @@ class GatherAgent(object):
         handler_specific_config = self.load_partial_config('Handlers', handler_cls)
         handler_specific_config.update(handler_generic_config)
 
-        for o in self.load_classes_list('handlers'):
+        for o, _ in self.load_classes_list('handlers'):
             if o.__name__ == handler_cls:
                 obj = o(handler_specific_config)
                 return obj
 
     def start_gatherers(self, instances, handler):
+        """
+        Creates new threads for each gatherer running the gatherer's run() method
+        """
         for instance in instances:
             t = threading.Thread(target=instance.run)
             t.daemon = True
@@ -52,11 +63,21 @@ class GatherAgent(object):
             self.gatherers.append(instance)
         
     def loop(self):
+        """
+        Main dispatcher loop which waits for available objects in the queue. Once
+        an event is received, it calls event's handler and waits for results before
+        processing the next event.
+        """
         while self.active:
             event = self.q.get()
             event.handle()
 
     def load_partial_config(self, section, keyprefix=None):
+        """
+        Parses a partial configuration from the ini-file, filtering any key that
+        isn't defined by the keyprefix. If no keyprefix is given, filters all the
+        properties that are namespaced with dot (.)
+        """
         section_config = self.config.items(section)
         partial_config = {}
         for k, v in section_config:
@@ -79,13 +100,16 @@ class GatherAgent(object):
         return handlers_config
     
     def load_gatherers_config(self, class_name):
-        #general_config = self.load_partial_config('General')
         generic_gatherer_config = self.load_partial_config('Gatherers')
         specific_gatherer_config = self.load_partial_config('Gatherers', class_name)
         generic_gatherer_config.update(specific_gatherer_config)
         return generic_gatherer_config
 
     def load_classes_list(self, package):
+        """
+        Loads all classes from the given package. Returns a generator with two
+        parameters, class_name and the module
+        """
         path = os.path.join(os.path.dirname(__file__), package)
         modules = pkgutil.iter_modules(path=[path])
 
@@ -96,27 +120,24 @@ class GatherAgent(object):
             for name in dir(module):
                 o = getattr(module, name)
                 if inspect.isclass(o):
-                    yield o
-    
+                    yield o, name
+
     def load_gatherers(self):
-        instances = []
-
-        path = os.path.join(os.path.dirname(__file__), "gatherers")
-        modules = pkgutil.iter_modules(path=[path])
-
-        for _, module_name, _ in modules:
-            fp, pathname, description = imp.find_module(module_name, [path])
-            module = imp.load_module(module_name, fp, pathname, description)
-            
-            for name in dir(module):
-                o = getattr(module, name)
-                if inspect.isclass(o) and issubclass(o, Gatherer) and o is not Gatherer:
-                    partial_config = self.load_gatherers_config(name)
-                    obj = o(self.handler, partial_config, self.q)
-                    instances.append(obj)
-        return instances
+        """
+        Creates and returns a generator with one instance of each gatherers
+        object.
+        """
+        for o, name in self.load_classes_list('gatherers'):
+            if issubclass(o, Gatherer) and o is not Gatherer:
+                partial_config = self.load_gatherers_config(name)
+                obj = o(self.handler, partial_config, self.q)
+                yield obj
 
     def _stop(self, signum, frame):
+        """
+        If a signal is received from the OS, this method is used to clean up and
+        stop all the gatherers and handlers.
+        """
         print 'Received signal ' + str(signum) + ', closing gatherers and handlers'
         self.active = False
         for i in self.gatherers:
