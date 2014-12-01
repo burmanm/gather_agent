@@ -1,6 +1,18 @@
-## Basics
+# Basics
+
+## Introduction
 
 This is a small system agent that collects basic system information and sends them to the RHQ Metrics. It is designed to avoid external dependencies and the only external dependency which it requires is the [rhq-metrics-python-client](https://github.com/burmanm/rhq-metrics-python-client)
+
+The agent itself is nothing but a light layer between input channels (called gatherers) and output channel (called handlers).
+
+## Configuration
+
+The default configuration file is named gather_agent.ini and is divided to different sections. There are some basic configuration settings, which are not specific to any gatherers or handlers. The difference is that their key-name does not have dot (``.``) in them.
+
+By default gather_agent sends events to the RHQ Metrics using rhq-metrics-python-client. To override this, change handler class in the General section. The server hostname and port are defined in the Handlers section with the properties names starting ``rhqmetricshandler.``
+
+The collection interval is defined in the Gatherers section, under a properties name ``interval``. The value is defined in seconds and the default is 15 seconds.
 
 ## Running
 
