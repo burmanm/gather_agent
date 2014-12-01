@@ -12,9 +12,13 @@ class Gatherer(object):
         self.interval = float(config['interval'])
         self.handler = handler
         self.active = True
+        self.init(self.config)
 
     def gather(self):
         raise NotImplementedError()
+
+    def init(self, config):
+        pass
 
     def create_event(self, key, value):
         timestamp = int(round(time.time() * 1000))
