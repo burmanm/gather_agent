@@ -26,4 +26,3 @@ class mem(Gatherer):
         with open(self.MEM_INFO, 'r') as f:
             for l in f:
                 yield l.split()
-    

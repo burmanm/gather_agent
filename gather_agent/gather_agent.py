@@ -148,4 +148,5 @@ if __name__ == "__main__":
     g = GatherAgent()
     if len(sys.argv) > 1:
         g.start(sys.argv[1])
-    g.start()
+    else:
+        g.start()
