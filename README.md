@@ -4,7 +4,7 @@
 
 This is a small system agent that collects basic system information and sends them to the RHQ Metrics. It is designed to avoid external dependencies and the only external dependency which it requires is the [rhq-metrics-python-client](https://github.com/burmanm/rhq-metrics-python-client)
 
-The agent itself is nothing but a light layer between input channels (called gatherers) and output channel (called handlers).
+The agent itself is nothing but a light layer between the input channels (called gatherers) and the output channel (called handlers).
 
 ## Configuration
 
